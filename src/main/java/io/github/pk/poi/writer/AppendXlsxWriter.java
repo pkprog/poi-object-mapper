@@ -2,7 +2,7 @@ package io.github.pk.poi.writer;
 
 import io.github.millij.poi.ss.model.Column;
 import io.github.millij.poi.util.Spreadsheet;
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -20,62 +20,97 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 public class AppendXlsxWriter implements SpreadsheetAppendWriter {
     private static final Logger LOGGER = LoggerFactory.getLogger(AppendXlsxWriter.class);
 
-    protected final XSSFWorkbook workbook;
+    protected final String inputFilePath;
+    protected XSSFWorkbook workbook;
 
-    public AppendXlsxWriter(XSSFWorkbook workbook) {
-        this.workbook = workbook;
+
+    public AppendXlsxWriter(String inputFilePath) {
+        this.inputFilePath = inputFilePath;
+    }
+
+    public AppendXlsxWriter start() throws IOException {
+        try (FileInputStream fis = new FileInputStream(this.inputFilePath)) {
+            this.workbook = new XSSFWorkbook(fis);
+        }
+
+        return this;
+    }
+
+    public AppendXlsxWriter end() throws IOException {
+        this.workbook.close();
+        return this;
     }
 
 
-
     @Override
-    public <T> void changeRow(String sheetName, int rownum, Class<T> beanClz, T rowObject, List<String> inHeaders) {
-        int rowNum = rownum;
-
-            final Sheet sheet = workbook.getSheet(sheetName);
-            if (sheet == null) {
-                String errMsg = String.format("Лист не найден по имени: %s", sheetName);
-                throw new PoiValidationException(errMsg);
-            }
-
-            final List<String> headers = inHeaders;
+    public <T> void changeRow(String sheetName, final int rownum, Class<T> beanClz, T rowObject, List<String> headers) {
+        final Sheet sheet = workbook.getSheet(sheetName);
+        if (sheet == null) {
+            String errMsg = String.format("Лист не найден по имени: %s", sheetName);
+            throw new PoiValidationException(errMsg);
+        }
 
 
         try {
-            // Header
-//            final Row headerRow = sheet.createRow(0);
-//            for (int i = 0; i < headers.size(); i++) {
-//                Cell cell = headerRow.createCell(i);
-//                cell.setCellValue(headers.get(i));
-//            }
+            Map<String, List<String>> rowsData = this.prepareSheetSingleRowData(headers, rowObject);
 
-            // Data Rows
-            final Map<String, List<String>> rowsData = this.prepareSheetRowData(headers, rowObject);
-           // for (int i = 0; i < rowObjects.size(); i++, ++rowNum) {
-                final Row row = sheet.createRow(rowNum);
+            Row row = sheet.createRow(rownum);
 
-                int cellNo = 0;
-                for (String key : rowsData.keySet()) {
-                    Cell cell = row.createCell(cellNo);
-                    String value = rowsData.get(key).get(0);
-                    cell.setCellValue(value);
-                    cellNo++;
-                }
-            //}
+            int cellNo = 0;
+            for (String key : rowsData.keySet()) {
+                Cell cell = row.createCell(cellNo);
+                String value = rowsData.get(key).get(0);
+                cell.setCellValue(value);
+                cellNo++;
+            }
 
         } catch (Exception ex) {
-            String errMsg = String.format("Error while preparing sheet with passed row objects : %s", ex.getMessage());
+            String errMsg = String.format("Ошибка замены данных в строке на листе: %s", ex.getMessage());
             LOGGER.error(errMsg, ex);
         }
     }
 
 
     @Override
-    public <T> int appendRow(String sheetName, Class<T> beanClz, List<T> rowObjects, List<String> inHeaders) {
-        return 0;
+    public <T> int appendRow(String sheetName, Class<T> beanClz, List<T> rowObjects, List<String> headers) {
+        final Sheet sheet = workbook.getSheet(sheetName);
+        if (sheet == null) {
+            String errMsg = String.format("Лист не найден по имени: %s", sheetName);
+            throw new PoiValidationException(errMsg);
+        }
+
+        int lasRowNum = sheet.getLastRowNum();
+
+
+        try {
+            //Map<String, List<String>> rowsData = this.prepareSheetSingleRowData(headers, rowObject);
+
+            // Data Rows
+            final Map<String, List<String>> rowsData = this.prepareSheetRowsData(headers, rowObjects);
+            for (int i = 0; i < rowObjects.size(); i++) {
+                lasRowNum++;
+
+                final Row row = sheet.createRow(lasRowNum);
+
+                int cellNo = 0;
+                for (String key : rowsData.keySet()) {
+                    Cell cell = row.createCell(cellNo);
+                    String value = rowsData.get(key).get(i);
+                    cell.setCellValue(value);
+                    cellNo++;
+                }
+            }
+
+        } catch (Exception ex) {
+            String errMsg = String.format("Ошибка дополнения данных на лист: %s", ex.getMessage());
+            LOGGER.error(errMsg, ex);
+        }
+
+        return lasRowNum;
     }
 
 
@@ -140,33 +175,12 @@ public class AppendXlsxWriter implements SpreadsheetAppendWriter {
 
 
     //@Override
-    public void save(OutputStream outputStrem) throws IOException {
-//        try {
-            workbook.write(outputStrem);
-            workbook.close();
-//        } catch (Exception ex) {
-//            final String errMsg = String.format("Failed to write workbook data to file : %s", filepath);
-//            LOGGER.error(errMsg);
-//            throw ex;
-//        }
-    }
-
-    // Sheet :: Append to existing
-
-
-    // Write
-
-    //@Override
-    public void write(final String filepath) throws IOException {
-        try (final OutputStream outputStrem = new FileOutputStream(new File(filepath))) {
-            workbook.write(outputStrem);
-            workbook.close();
-        } catch (Exception ex) {
-            final String errMsg = String.format("Failed to write workbook data to file : %s", filepath);
-            LOGGER.error(errMsg);
-            throw ex;
+    public void save() throws IOException {
+        try (final OutputStream outputStrem = new FileOutputStream(this.inputFilePath)) {
+            this.workbook.write(outputStrem);
         }
     }
+
 
 
     // Private Methods
@@ -191,7 +205,7 @@ public class AppendXlsxWriter implements SpreadsheetAppendWriter {
         return sheetData;
     }
 
-    private <T> Map<String, List<String>> prepareSheetRowData(List<String> headers, T rowObj) throws Exception {
+    private <T> Map<String, List<String>> prepareSheetSingleRowData(List<String> headers, T rowObj) throws Exception {
         // Sheet data
         final Map<String, List<String>> sheetData = new LinkedHashMap<>();
 
