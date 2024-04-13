@@ -27,7 +27,7 @@ public class ChangeTest {
     public void test1() throws IOException {
         // Employees
         List<Employee> employees = new ArrayList<>();
-        employees.add(new Employee("1", "foo", 12, "WOW-MAN2", 1.68));
+        employees.add(new Employee("1", "foo", 12, "WOW-MAN1", 1.68));
 //        employees.add(new Employee("2", "bar", null, "MALE", 1.68));
 //        employees.add(new Employee("3", "foo bar", null, null, null));
 
@@ -38,7 +38,7 @@ public class ChangeTest {
         AppendXlsxWriter writer = new AppendXlsxWriter(_filepath_xls_test1);
         writer.start();
 
-        writer.changeRow("Sheet1", 1, Employee.class, employees.get(0));
+        writer.changeRow(1, Employee.class, employees.get(0));
         writer.save();
 
 
@@ -50,7 +50,7 @@ public class ChangeTest {
     public void test2() throws IOException {
         // Employees
         List<Employee> employees = new ArrayList<>();
-        employees.add(new Employee("1", "foo", 12, "WOW-MAN3", 1.68));
+        employees.add(new Employee("1", "foo", 12, "WOW-MAN0", 1.68));
 //        employees.add(new Employee("2", "bar", null, "MALE", 1.68));
 //        employees.add(new Employee("3", "foo bar", null, null, null));
 
@@ -61,7 +61,7 @@ public class ChangeTest {
         AppendXlsxWriter writer = new AppendXlsxWriter(_filepath_xls_test1);
         writer.start();
 
-        writer.appendRow("Sheet1", Employee.class, employees);
+        writer.appendRow(Employee.class, employees);
         writer.save();
 
 

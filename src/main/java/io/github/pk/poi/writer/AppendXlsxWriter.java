@@ -46,14 +46,16 @@ public class AppendXlsxWriter implements SpreadsheetAppendWriter {
 
 
     @Override
-    public <T> void changeRow(String sheetName, final int rownum, Class<T> beanClz, T rowObject) {
+    public <T> void changeRow(final int rownum, Class<T> beanClz, T rowObject) {
+        final String sheetName = Spreadsheet.getSheetName(beanClz);
+        final List<String> headers = getColumnNames(beanClz);
+
+
         final Sheet sheet = workbook.getSheet(sheetName);
         if (sheet == null) {
             String errMsg = String.format("Лист не найден по имени: %s", sheetName);
             throw new PoiValidationException(errMsg);
         }
-
-        final List<String> headers = getColumnNames(beanClz);
 
 
         try {
@@ -77,14 +79,16 @@ public class AppendXlsxWriter implements SpreadsheetAppendWriter {
 
 
     @Override
-    public <T> int appendRow(String sheetName, Class<T> beanClz, List<T> rowObjects) {
+    public <T> int appendRow(Class<T> beanClz, List<T> rowObjects) {
+        final String sheetName = Spreadsheet.getSheetName(beanClz);
+        final List<String> headers = getColumnNames(beanClz);
+
+
         final Sheet sheet = workbook.getSheet(sheetName);
         if (sheet == null) {
             String errMsg = String.format("Лист не найден по имени: %s", sheetName);
             throw new PoiValidationException(errMsg);
         }
-
-        final List<String> headers = getColumnNames(beanClz);
 
 
         int lasRowNum = sheet.getLastRowNum();
