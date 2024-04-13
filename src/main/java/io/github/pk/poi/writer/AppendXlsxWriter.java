@@ -139,6 +139,18 @@ public class AppendXlsxWriter implements SpreadsheetAppendWriter {
     }
 
 
+    //@Override
+    public void save(OutputStream outputStrem) throws IOException {
+//        try {
+            workbook.write(outputStrem);
+            workbook.close();
+//        } catch (Exception ex) {
+//            final String errMsg = String.format("Failed to write workbook data to file : %s", filepath);
+//            LOGGER.error(errMsg);
+//            throw ex;
+//        }
+    }
+
     // Sheet :: Append to existing
 
 
