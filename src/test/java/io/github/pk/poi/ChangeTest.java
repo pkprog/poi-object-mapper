@@ -5,7 +5,6 @@ import io.github.pk.poi.writer.AppendXlsxWriter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,18 +27,18 @@ public class ChangeTest {
     public void test1() throws IOException {
         // Employees
         List<Employee> employees = new ArrayList<>();
-        employees.add(new Employee("1", "foo", 12, "WOW-MAN", 1.68));
+        employees.add(new Employee("1", "foo", 12, "WOW-MAN2", 1.68));
 //        employees.add(new Employee("2", "bar", null, "MALE", 1.68));
 //        employees.add(new Employee("3", "foo bar", null, null, null));
 
 
-        List<String> headers = Arrays.asList("ID", "Age", "Name", "Address", "Gender");
+        //List<String> headers = Arrays.asList("ID", "Age", "Name", "Address", "Gender");
 
 
         AppendXlsxWriter writer = new AppendXlsxWriter(_filepath_xls_test1);
         writer.start();
 
-        writer.changeRow("Sheet1", 1, Employee.class, employees.get(0), headers);
+        writer.changeRow("Sheet1", 1, Employee.class, employees.get(0));
         writer.save();
 
 
@@ -51,18 +50,18 @@ public class ChangeTest {
     public void test2() throws IOException {
         // Employees
         List<Employee> employees = new ArrayList<>();
-        employees.add(new Employee("1", "foo", 12, "WOW-MAN", 1.68));
+        employees.add(new Employee("1", "foo", 12, "WOW-MAN3", 1.68));
 //        employees.add(new Employee("2", "bar", null, "MALE", 1.68));
 //        employees.add(new Employee("3", "foo bar", null, null, null));
 
 
-        List<String> headers = Arrays.asList("ID", "Age", "Name", "Address", "Gender");
+        //List<String> headers = Arrays.asList("ID", "Age", "Name", "Address", "Gender");
 
 
         AppendXlsxWriter writer = new AppendXlsxWriter(_filepath_xls_test1);
         writer.start();
 
-        writer.appendRow("Sheet1", Employee.class, employees, headers);
+        writer.appendRow("Sheet1", Employee.class, employees);
         writer.save();
 
 
